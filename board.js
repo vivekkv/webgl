@@ -1,21 +1,25 @@
 var scene, camera, controls, fieldOfView, aspectRatio, nearPlane, farPlane, shadowLight, backLight, light, renderer, container, materials = [], color;
 var floor, fan, isBlowing = false;
 var HEIGHT, WIDTH, windowHalfX, windowHalfY, mousePos = { 'x': 0, 'y': 0 }; dist = 0;
+var group = null;
 
 function init() {
 
+    group = new THREE.Group();
     scene = new THREE.Scene();
     HEIGHT = window.innerHeight;
     WIDTH = window.innerWidth;
     aspectRatio = WIDTH / HEIGHT;
-    fieldOfView = 60;
+    fieldOfView = 70;
     nearPlane = 1;
     farPlane = 2000;
     camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
 
     camera.position.z = 800;
-    camera.position.y = 0;
+    camera.position.y = -300;
+
     camera.lookAt(new THREE.Vector3(0, 0, 0));
+
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(WIDTH, HEIGHT);
@@ -23,119 +27,24 @@ function init() {
 
     container = document.getElementById('world');
     container.appendChild(renderer.domElement);
+
     windowHalfX = WIDTH / 2;
     windowHalfY = HEIGHT / 2;
-
     document.addEventListener('mousemove', onDocumentMouseMove, false);
-
 }
 
 function createFloor() {
 
-    floor = new THREE.Mesh(new THREE.PlaneBufferGeometry(900, 500), new THREE.MeshBasicMaterial({ color: 0xebe5e7 }));
-    floor.rotation.x = -Math.PI / 3;
-    floor.position.y = -50;
-    floor.receiveShadow = true;
-    scene.add(floor);
-
-    floor = new THREE.Mesh(new THREE.PlaneBufferGeometry(900, 500), new THREE.MeshBasicMaterial({ color: 0xebe5e7 }));
-    // floor.rotation.x = -Math.PI / 3;
-    floor.position.y = 100;
-    floor.receiveShadow = true;
-    scene.add(floor);
+    floor = new THREE.Mesh(new THREE.PlaneBufferGeometry(1300, 600), 
+        new THREE.MeshBasicMaterial({ color: 0x000000 }));
+    group.add(floor);
+    group.rotation.x = -Math.PI / 5;
 }
 
-function createFan() {
-
-    fan = new Fan();
-    fan.threegroup.position.z = 350;
-    scene.add(fan.threegroup);
-}
-
-Fan = function () {
-
-    this.isBlowing = false;
-    this.speed = 0;
-    this.acc = 0;
-
-    this.redMat = new THREE.MeshLambertMaterial({ color: 0xad3525, shading: THREE.FlatShading });
-    this.greyMat = new THREE.MeshLambertMaterial({ color: 0x653f4c, shading: THREE.FlatShading });
-    this.yellowMat = new THREE.MeshLambertMaterial({ color: 0xfdd276, shading: THREE.FlatShading });
-
-    var coreGeom = new THREE.BoxGeometry(10, 10, 200);
-    var sphereGeom = new THREE.BoxGeometry(10, 10, 3);
-    var propGeom = new THREE.BoxGeometry(3, 30, 2);
-
-    propGeom.applyMatrix(new THREE.Matrix4().makeTranslation(0, 25, 0));
-    this.core = new THREE.Mesh(coreGeom, this.greyMat);
-
-    // propellers
-    var prop1 = new THREE.Mesh(propGeom, this.redMat);
-    prop1.position.z = 15;
-
-    var prop2 = prop1.clone();
-    prop2.rotation.z = Math.PI / 2;
-
-    var prop3 = prop1.clone();
-    prop3.rotation.z = Math.PI;
-
-    var prop4 = prop1.clone();
-    prop4.rotation.z = -Math.PI / 2;
-
-    var prop5 = prop1.clone();
-    prop5.rotation.z = 11.8;
-
-    this.sphere = new THREE.Mesh(sphereGeom, this.yellowMat);
-    this.sphere.position.z = 15;
-
-    this.propeller = new THREE.Group();
-    this.propeller.add(prop1);
-    this.propeller.add(prop2);
-    this.propeller.add(prop3);
-    this.propeller.add(prop4);
-    //this.propeller.add(prop5);
-
-    this.threegroup = new THREE.Group();
-    this.threegroup.add(this.core);
-    this.threegroup.add(this.propeller);
-    this.threegroup.add(this.sphere);
-
-}
-
-Fan.prototype.update = function (xTarget, yTarget) {
-
-
-    this.threegroup.lookAt(new THREE.Vector3(0, 80, 60));
-    this.tPosX = rule3(xTarget, -200, 200, -250, 250);
-    this.tPosY = rule3(yTarget, -200, 200, 250, -250);
-
-    this.threegroup.position.x += (this.tPosX - this.threegroup.position.x) / 10;
-    this.threegroup.position.y += (this.tPosY - this.threegroup.position.y) / 10;
-
-    this.targetSpeed = (this.isBlowing) ? .3 : .01;
-
-    if (this.isBlowing && this.speed < .5) {
-
-        this.acc += .001;
-
-        this.speed += this.acc;
-    }
-    else if (!this.isBlowing) {
-
-        this.acc = 0;
-        this.speed *= .98;
-
-    }
-
-    this.propeller.rotation.z += this.speed;
-
-}
-
-function loop() {
+function animateFrame() {
 
     render();
-    requestAnimationFrame(loop);
-    fan.update();
+    ////requestAnimationFrame(animateFrame);
 }
 
 function createParticles() {
@@ -149,7 +58,6 @@ function createParticles() {
         vertex.y = Math.random() * 2000 - 1000;
         vertex.z = Math.random() * 2000 - 1000;
         geometry.vertices.push(vertex);
-
     }
 
     parameters = [
@@ -184,19 +92,105 @@ function createParticles() {
 }
 
 function onDocumentMouseMove(event) {
-
     mousePos.x = event.clientX - windowHalfX;
     mousePos.y = event.clientY - windowHalfY;
 }
 
 function render() {
 
+    camera.position.x += (mousePos.x - camera.position.x) * 0.05;
+    camera.position.y += (mousePos.y - camera.position.y) * 0.05;
+    camera.lookAt(scene.position);
+
+    scene.add(group)
+
     if (controls) controls.update();
     renderer.render(scene, camera);
 }
 
+function addBoxGeometry() {
+
+    let colorCode = 0xffffff;
+    let cubeDepth = 300;
+    let width = 80;
+    let topX = -580;
+    let topY = 220;
+    let data = [[60, 50, 100],
+    [60, 50, 180],
+    [60, 50, 220],
+    [60, 50, 260]];
+
+    var fontColor = { r: 255, g: 255, b: 0, a: 1.0 };
+
+    data.forEach((box) => {
+
+        var geometry = new THREE.BoxGeometry(box[0], box[1], box[2]);
+        var material = new THREE.MeshBasicMaterial({ color: colorCode });
+        //var material = new THREE.MeshLambertMaterial({color: 0xffffffff});
+        var cube = new THREE.Mesh(geometry, material);
+
+        cube.position.x = topX;
+        cube.position.y = topY;
+
+        group.add(cube);
+
+        var spritey = makeTextSprite('20', 0x00000);
+        spritey.position.x = topX + 40;
+        spritey.position.y = topY - 40;
+        spritey.position.z = 30;
+        group.add(spritey);
+
+        topX += 100;
+    });
+
+    var light = new THREE.PointLight(0xffffffff);
+    light.position.set(-150, 100, 500);
+    scene.add(light);
+}
+
+function getRandom(min, max) {
+
+    return Math.round(Math.random() * (max - min) + min);
+}
+
+function makeTextSprite(message, fontColor, materialColor) {
+
+    var fontface = "poppins";
+    var fontsize = 80;
+    var borderThickness = 2;
+
+    var canvas = document.createElement('canvas');
+    var context = canvas.getContext('2d');
+    var backgroundColor = {
+        r: 255,
+        g: 255,
+        b: 255,
+        a: 0.0
+    };
+
+    context.font = "bold " + fontsize + "px " + fontface;
+
+    var metrics = context.measureText(message);
+    var textWidth = metrics.width;
+
+    context.fillStyle = "#0e3b84";
+    context.fillText(message, borderThickness, fontsize + borderThickness);
+
+    var texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+
+    var spriteMaterial = new THREE.SpriteMaterial({
+        map: texture,
+        color: materialColor != undefined ? materialColor : 0xffffff,
+    });
+
+    var sprite = new THREE.Sprite(spriteMaterial);
+    sprite.scale.set(100, 50, 1.0);
+    return sprite;
+}
+
+
 init();
 createFloor();
-createFan();
-//createParticles();
-loop();
+addBoxGeometry();
+animateFrame();

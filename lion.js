@@ -144,14 +144,17 @@ function createFan(){
   scene.add(fan.threegroup);
 }
 
-Fan = function(){
+Fan = function() {
+
   this.isBlowing = false;
   this.speed = 0;
   this.acc =0;
+  
   this.redMat = new THREE.MeshLambertMaterial ({
     color: 0xad3525, 
     shading:THREE.FlatShading
   });
+
   this.greyMat = new THREE.MeshLambertMaterial ({
     color: 0x653f4c, 
     shading:THREE.FlatShading
@@ -165,11 +168,10 @@ Fan = function(){
   var coreGeom = new THREE.BoxGeometry(10,10,20);
   var sphereGeom = new THREE.BoxGeometry(10, 10, 3);
   var propGeom = new THREE.BoxGeometry(10,30,2);
-  propGeom.applyMatrix( new THREE.Matrix4().makeTranslation( 0,25,0) );
   
+  propGeom.applyMatrix( new THREE.Matrix4().makeTranslation( 0,25,0) );
   this.core = new THREE.Mesh(coreGeom,this.greyMat);
   
-  // propellers
   var prop1 = new THREE.Mesh(propGeom, this.redMat);
   prop1.position.z = 15;
   var prop2 = prop1.clone();
@@ -195,6 +197,7 @@ Fan = function(){
 }
 
 Fan.prototype.update = function(xTarget, yTarget){
+
   this.threegroup.lookAt(new THREE.Vector3(0,80,60));
   this.tPosX = rule3(xTarget, -200, 200, -250, 250);
   this.tPosY = rule3(yTarget, -200, 200, 250, -250);
@@ -203,14 +206,20 @@ Fan.prototype.update = function(xTarget, yTarget){
   this.threegroup.position.y += (this.tPosY - this.threegroup.position.y) /10;
   
   this.targetSpeed = (this.isBlowing) ? .3 : .01;
+
   if (this.isBlowing && this.speed < .5){
+  
     this.acc +=.001;
     this.speed += this.acc;
+
   }else if (!this.isBlowing){
+  
     this.acc = 0;
     this.speed *= .98;
   }
+  
   this.propeller.rotation.z += this.speed; 
+
 }
 
 Lion = function(){

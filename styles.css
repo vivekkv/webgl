@@ -9,3 +9,7 @@ body {
     margin: 0;
     overflow: hidden;
 }
+
+canvas {
+    /* background: #c6c6c6 */
+}
